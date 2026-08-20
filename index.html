@@ -1,0 +1,1301 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Treinamento — LLM, RAG e Agentes de IA</title>
+<style>
+  :root{
+    --bordo:#7A1533;
+    --bordo-esc:#4A0E1A;
+    --vinho:#9E1B3A;
+    --dourado:#B8862B;
+    --dourado-cl:#D4A24A;
+    --rose:#F0D8DE;
+    --cinza:#5A4750;
+    --papel:#FBF5F6;
+    --verde:#2E7D5B;
+    --verde-bg:#E6F2EC;
+    --erro:#B03A2E;
+    --erro-bg:#F7E7E4;
+    --linha:#E8D3D9;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html{-webkit-text-size-adjust:100%}
+  body{
+    font-family:'Segoe UI',system-ui,-apple-system,Roboto,Helvetica,Arial,sans-serif;
+    background:
+      radial-gradient(1200px 600px at 100% -10%, rgba(122,21,51,.12), transparent 60%),
+      radial-gradient(900px 500px at -10% 110%, rgba(184,134,43,.12), transparent 55%),
+      var(--papel);
+    color:var(--cinza);
+    min-height:100vh;
+    display:flex;
+    align-items:flex-start;
+    justify-content:center;
+    padding:32px 18px 64px;
+    line-height:1.55;
+  }
+  .wrap{width:100%;max-width:720px}
+
+  /* ---------- Cabeçalho ---------- */
+  .brand{margin-bottom:22px}
+  .eyebrow{
+    font-size:12px;font-weight:700;letter-spacing:2.5px;text-transform:uppercase;
+    color:var(--vinho);margin-bottom:6px;
+  }
+  .brand h1{
+    font-family:'Segoe UI',system-ui,-apple-system,Roboto,Helvetica,Arial,sans-serif;
+    font-size:30px;line-height:1.15;color:var(--bordo);font-weight:700;
+  }
+  .brand .sig{font-size:13px;color:#8A7278;margin-top:6px}
+  .brand .sig b{color:var(--bordo)}
+
+
+  /* ---------- Formulário final (Google Forms) ---------- */
+  .form-embed{max-width:660px;margin:0 auto}
+  .form-embed iframe{display:block;width:100%;max-width:640px;height:1632px;border:0;margin:0 auto}
+
+  .foot{text-align:center;font-size:12px;color:#9a8087;margin-top:22px}
+
+  /* ===================================================================
+     TELAS (capa / menu / quiz) — controle de visibilidade
+     =================================================================== */
+  .screen{display:none;width:100%}
+  .screen.active{display:block}
+
+  /* body ganha fundo bordô cheio nas telas de capa e menu */
+  body.cover-mode{
+    background:
+      radial-gradient(1100px 700px at 100% -10%, rgba(255,255,255,.06), transparent 60%),
+      radial-gradient(900px 600px at -10% 110%, rgba(0,0,0,.25), transparent 55%),
+      linear-gradient(150deg, var(--bordo-esc) 0%, var(--bordo) 55%, var(--vinho) 100%);
+    align-items:center;
+  }
+
+  /* ---------- Capa (nome) ---------- */
+  .cover{
+    text-align:center;color:#fff;max-width:560px;margin:0 auto;
+    padding:20px 10px;
+  }
+  .cover .badge{
+    width:78px;height:78px;border-radius:50%;margin:0 auto 22px;
+    background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.25);
+    display:flex;align-items:center;justify-content:center;font-size:34px;
+  }
+  .cover .eyebrow{color:var(--dourado-cl);margin-bottom:12px}
+  .cover h1{
+    font-family:'Segoe UI',system-ui,-apple-system,Roboto,Helvetica,Arial,sans-serif;font-weight:700;
+    font-size:40px;line-height:1.12;margin-bottom:14px;color:#fff;
+  }
+  .cover .lede{
+    font-size:17px;color:var(--rose);max-width:440px;margin:0 auto 34px;line-height:1.5;
+  }
+  .field{max-width:400px;margin:0 auto;text-align:left}
+  .field label{
+    display:block;font-size:12px;font-weight:700;letter-spacing:1.5px;
+    text-transform:uppercase;color:var(--dourado-cl);margin-bottom:8px;
+  }
+  .field input{
+    width:100%;font:inherit;font-size:17px;color:#fff;
+    background:rgba(255,255,255,.08);border:2px solid rgba(255,255,255,.28);
+    border-radius:12px;padding:14px 16px;transition:border-color .15s,background .15s;
+  }
+  .field input::placeholder{color:rgba(255,255,255,.5)}
+  .field input:focus{outline:none;border-color:var(--dourado-cl);background:rgba(255,255,255,.14)}
+  .field .hint{font-size:12.5px;color:rgba(255,255,255,.55);margin-top:8px;min-height:16px}
+  .field .hint.err{color:#FFD2C9}
+
+  .btn-gold{
+    appearance:none;cursor:pointer;font:inherit;font-weight:700;font-size:16px;
+    color:var(--bordo-esc);background:linear-gradient(135deg,var(--dourado-cl),var(--dourado));
+    border:none;border-radius:12px;padding:15px 30px;margin-top:22px;width:100%;max-width:400px;
+    transition:transform .12s,box-shadow .15s;display:inline-flex;align-items:center;
+    justify-content:center;gap:8px;
+  }
+  .btn-gold:hover{transform:translateY(-2px);box-shadow:0 14px 28px -14px rgba(0,0,0,.5)}
+  .btn-gold:focus-visible{outline:3px solid #fff;outline-offset:2px}
+  .btn-gold:disabled{opacity:.5;cursor:not-allowed;transform:none;box-shadow:none}
+
+  /* ---------- Menu (dois caminhos) ---------- */
+  .menu{text-align:center;color:#fff;max-width:640px;margin:0 auto;padding:20px 10px}
+  .menu .greet{
+    font-family:'Segoe UI',system-ui,-apple-system,Roboto,Helvetica,Arial,sans-serif;font-size:32px;margin-bottom:6px;color:#fff;
+  }
+  .menu .greet .nm{color:var(--dourado-cl)}
+  .menu .sub{color:var(--rose);font-size:16px;margin-bottom:36px}
+  .paths{display:grid;grid-template-columns:1fr 1fr;gap:18px;text-align:left}
+  /* quando sobra 1 card ímpar no fim, ele ocupa a linha inteira em vez de ficar torto */
+  #screen-training .paths > :last-child:nth-child(odd){grid-column:1 / -1}
+  .path{
+    background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.2);
+    border-radius:18px;padding:26px 22px;cursor:pointer;
+    transition:transform .14s,background .15s,border-color .15s,box-shadow .15s;
+    display:flex;flex-direction:column;min-height:210px;
+    color:#fff;text-decoration:none;text-align:left;font:inherit;
+  }
+  .path:hover{transform:translateY(-4px);background:rgba(255,255,255,.12);
+    border-color:var(--dourado-cl);box-shadow:0 18px 36px -20px rgba(0,0,0,.6)}
+  .path:focus-visible{outline:3px solid var(--dourado-cl);outline-offset:3px}
+  .path .pico{
+    width:56px;height:56px;border-radius:14px;display:flex;align-items:center;
+    justify-content:center;font-size:26px;margin-bottom:16px;
+    background:rgba(212,162,74,.22);
+  }
+  .path h3{font-family:'Segoe UI',system-ui,-apple-system,Roboto,Helvetica,Arial,sans-serif;font-size:21px;margin-bottom:8px;color:#fff}
+  .path p{font-size:13.5px;color:var(--rose);line-height:1.5;flex:1}
+  .path .cta{
+    margin-top:14px;font-size:13px;font-weight:700;color:var(--dourado-cl);
+    letter-spacing:.5px;display:inline-flex;align-items:center;gap:6px;
+  }
+  .menu .back{
+    margin-top:30px;background:none;border:none;color:rgba(255,255,255,.65);
+    font:inherit;font-size:13px;cursor:pointer;text-decoration:underline;
+  }
+  .menu .back:hover{color:#fff}
+
+  /* grid de 2 botões (menu principal) fica centralizado */
+  .paths-2{max-width:640px;margin:0 auto}
+
+  /* logo na capa */
+  .logo-cover{width:74px;height:auto;margin:0 auto 20px;display:block}
+
+  /* barra de marca (logo + nome) no topo dos menus */
+  .brandbar{
+    display:flex;align-items:center;justify-content:center;gap:11px;margin-bottom:26px;
+  }
+  .brandbar img{width:38px;height:auto}
+  .brandbar span{
+    font-family:'Segoe UI',system-ui,-apple-system,Roboto,Helvetica,Arial,sans-serif;font-size:22px;font-weight:700;letter-spacing:.5px;
+  }
+  .brandbar.light span{color:#fff}
+  .brandbar.dark span{color:var(--bordo)}
+
+  /* caixa de conclusão + checkbox */
+  .complete-box{
+    max-width:520px;margin:26px auto 0;text-align:center;
+    background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.2);
+    border-radius:16px;padding:22px 22px 20px;
+  }
+  .check-line{
+    display:flex;align-items:center;gap:12px;cursor:pointer;
+    justify-content:flex-start;text-align:left;margin-bottom:16px;
+  }
+  .check-line input{position:absolute;opacity:0;width:0;height:0}
+  .checkmark{
+    width:26px;height:26px;border-radius:7px;flex:0 0 auto;
+    background:rgba(255,255,255,.12);border:2px solid rgba(255,255,255,.5);
+    display:flex;align-items:center;justify-content:center;transition:all .15s;
+  }
+  .checkmark::after{
+    content:"✓";color:var(--bordo-esc);font-size:16px;font-weight:900;
+    opacity:0;transform:scale(.5);transition:all .15s;
+  }
+  .check-line input:checked ~ .checkmark{
+    background:var(--dourado-cl);border-color:var(--dourado-cl);
+  }
+  .check-line input:checked ~ .checkmark::after{opacity:1;transform:scale(1)}
+  .check-line input:focus-visible ~ .checkmark{outline:3px solid #fff;outline-offset:2px}
+  .check-text{color:#fff;font-size:15px;font-weight:600;line-height:1.4}
+  .quiz-go{width:100%;max-width:100%;margin-top:0}
+  .quiz-go:disabled{opacity:.45;cursor:not-allowed;transform:none;box-shadow:none}
+  .quiz-hint{font-size:12.5px;color:rgba(255,255,255,.6);margin-top:10px}
+  .quiz-hint.ready{color:var(--dourado-cl);font-weight:700}
+
+  /* card do quiz bloqueado (menu principal) */
+  .path.locked{opacity:.55;cursor:not-allowed}
+  .path.locked:hover{transform:none;background:rgba(255,255,255,.07);
+    border-color:rgba(255,255,255,.2);box-shadow:none}
+  .path.locked .pico{background:rgba(255,255,255,.1)}
+  .path .lock-ic{font-size:15px}
+  .path.unlocked{opacity:1;cursor:pointer}
+  .path.unlocked .pico{background:rgba(212,162,74,.32)}
+  .path.unlocked .cta{color:var(--dourado-cl)}
+  .path.unlocked.pulse{animation:cardpulse 1.1s ease}
+  @keyframes cardpulse{
+    0%{box-shadow:0 0 0 0 rgba(212,162,74,.5)}
+    100%{box-shadow:0 0 0 16px rgba(212,162,74,0)}
+  }
+
+  /* nome do participante no topo do quiz */
+  .whoami{
+    font-size:12px;color:#8A7278;margin-bottom:2px;
+  }
+  .whoami b{color:var(--bordo)}
+
+  /* logo pequeno no topo do visualizador e do quiz */
+  .mini-brand{display:flex;align-items:center;gap:8px;margin-bottom:10px}
+  .mini-brand img{width:26px;height:auto}
+  .mini-brand span{font-family:'Segoe UI',system-ui,-apple-system,Roboto,Helvetica,Arial,sans-serif;font-weight:700;font-size:15px;color:var(--bordo)}
+
+  /* visualizador em iframe — CAIXA MAIOR */
+  .viewer-frame{
+    position:relative;width:100%;
+    border-radius:16px;overflow:hidden;background:#000;
+    border:1px solid var(--linha);box-shadow:0 20px 44px -26px rgba(74,14,26,.6);
+    margin-bottom:8px;
+  }
+  .viewer-frame.ratio-video{padding-top:56.25%}          /* 16:9 para vídeo */
+  .viewer-frame.ratio-doc{height:88vh;min-height:640px}  /* documentos: bem alto */
+  .viewer-frame iframe{
+    position:absolute;inset:0;width:100%;height:100%;border:0;
+  }
+  .viewer-frame.ratio-doc iframe{position:relative}
+  /* visualizador de documento ocupa mais largura */
+  #screen-viewer .reader{max-width:1040px}
+
+  /* ---------- Tela de vídeo: player grande + lista de aulas ---------- */
+  #screen-video .reader{max-width:1440px}
+  .video-layout{display:grid;grid-template-columns:2.4fr 1fr;gap:20px;align-items:start}
+  .video-list{display:flex;flex-direction:column;gap:10px}
+  .video-item{
+    appearance:none;font:inherit;cursor:pointer;text-align:left;
+    display:flex;gap:12px;align-items:center;
+    background:#fff;border:1.5px solid var(--linha);border-radius:14px;
+    padding:14px 16px;transition:border-color .15s,box-shadow .15s,background .15s;
+  }
+  .video-item:hover{border-color:#E3C0C9;box-shadow:0 10px 22px -18px rgba(122,21,51,.5)}
+  .video-item:focus-visible{outline:3px solid var(--dourado-cl);outline-offset:2px}
+  .video-item .vnum{
+    width:34px;height:34px;border-radius:9px;flex:0 0 auto;
+    background:var(--rose);color:var(--bordo);font-weight:800;font-size:14px;
+    display:flex;align-items:center;justify-content:center;
+  }
+  .video-item .vtext{flex:1;min-width:0}
+  .video-item .vlabel{
+    font-size:11px;font-weight:800;letter-spacing:.8px;text-transform:uppercase;
+    color:var(--dourado);margin-bottom:2px;
+  }
+  .video-item .vtitle{font-size:14.5px;font-weight:700;color:#3a2c31;line-height:1.35}
+  .video-item.active{border-color:var(--bordo);background:var(--rose);box-shadow:0 10px 22px -16px rgba(122,21,51,.35)}
+  .video-item.active .vnum{background:var(--bordo);color:#fff}
+  @media (max-width:720px){
+    .video-layout{grid-template-columns:1fr}
+  }
+
+  /* ---------- Leitor de PDF (PDF.js) ---------- */
+  /* altura acompanha o conteúdo (não fixa) — evita sobra vazia em slides 16:9 */
+  .viewer-frame.ratio-pdf{background:var(--papel)}
+  .pdf-viewer{display:flex;flex-direction:column;width:100%}
+  .pdf-toolbar{
+    display:flex;align-items:center;justify-content:center;gap:6px;flex-wrap:wrap;
+    background:linear-gradient(135deg,var(--bordo-esc),var(--bordo));
+    padding:10px 14px;flex:0 0 auto;
+  }
+  .pdf-btn{
+    appearance:none;cursor:pointer;font:inherit;font-weight:700;
+    color:#fff;background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.25);
+    border-radius:8px;width:34px;height:34px;display:inline-flex;align-items:center;justify-content:center;
+    font-size:16px;line-height:1;transition:background .15s,opacity .15s;
+  }
+  .pdf-btn:hover:not(:disabled){background:rgba(255,255,255,.24)}
+  .pdf-btn:disabled{opacity:.35;cursor:not-allowed}
+  .pdf-btn:focus-visible{outline:2px solid var(--dourado-cl);outline-offset:2px}
+  .pdf-btn-text{width:auto;padding:0 12px;font-size:12.5px;letter-spacing:.3px}
+  .pdf-page-indicator,.pdf-zoom-indicator{
+    color:#fff;font-size:13px;font-weight:700;min-width:52px;text-align:center;
+  }
+  .pdf-sep{width:1px;height:22px;background:rgba(255,255,255,.25);margin:0 4px}
+  .pdf-canvas-wrap{
+    max-height:80vh;overflow:auto;display:flex;justify-content:center;align-items:center;
+    padding:22px;
+    background:
+      radial-gradient(1000px 500px at 100% 0%, rgba(122,21,51,.05), transparent 60%),
+      var(--papel);
+  }
+  .pdf-canvas-wrap canvas{
+    box-shadow:0 18px 40px -20px rgba(74,14,26,.5);border-radius:4px;background:#fff;
+    display:block;
+  }
+  .pdf-status{margin:auto;color:#8A7278;font-size:14px;font-weight:600;text-align:center;max-width:420px}
+
+  /* ===================================================================
+     TELA · MATERIAL DE TREINAMENTO (leitura interna)
+     =================================================================== */
+  .reader{width:100%;max-width:760px;margin:0 auto;padding:20px 20px 60px}
+  .reader-top{
+    display:flex;justify-content:space-between;align-items:center;gap:12px;
+    margin-bottom:26px;position:sticky;top:0;z-index:5;
+    background:linear-gradient(var(--papel) 70%, rgba(251,245,246,0));
+    padding:14px 0 10px;
+  }
+  .rtop-back,.rtop-quiz{
+    appearance:none;cursor:pointer;font:inherit;font-weight:700;font-size:13.5px;
+    border-radius:10px;padding:9px 16px;transition:all .15s;
+  }
+  .rtop-back{background:#fff;border:1.5px solid var(--linha);color:var(--bordo)}
+  .rtop-back:hover{border-color:var(--bordo)}
+  .rtop-quiz{background:var(--bordo);border:none;color:#fff}
+  .rtop-quiz:hover{background:var(--vinho)}
+  .rtop-back:focus-visible,.rtop-quiz:focus-visible{outline:3px solid var(--dourado-cl);outline-offset:2px}
+
+  .reader-head{margin-bottom:24px}
+  .reader-head .eyebrow{color:var(--vinho);margin-bottom:8px}
+  .reader-head h1{
+    font-family:'Segoe UI',system-ui,-apple-system,Roboto,Helvetica,Arial,sans-serif;font-size:38px;color:var(--bordo);
+    font-weight:700;line-height:1.1;margin-bottom:14px;
+  }
+  .reader-lede{font-size:16px;color:var(--cinza);line-height:1.6;max-width:660px}
+
+  /* índice */
+  .toc{
+    display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:8px;
+    background:#fff;border:1px solid var(--linha);border-radius:14px;padding:16px;
+  }
+  .toc a{
+    display:flex;align-items:center;gap:10px;text-decoration:none;
+    color:var(--cinza);font-weight:600;font-size:14.5px;padding:8px 10px;
+    border-radius:9px;transition:background .15s,color .15s;
+  }
+  .toc a:hover{background:var(--papel);color:var(--bordo)}
+  .toc .tnum{
+    width:26px;height:26px;border-radius:7px;background:var(--bordo);color:#fff;
+    display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:800;flex:0 0 auto;
+  }
+
+  /* seções de conteúdo */
+  .rsec{margin-top:34px;scroll-margin-top:78px}
+  .rsec-head{display:flex;align-items:center;gap:14px;margin-bottom:6px}
+  .rsec-head .rn{
+    width:40px;height:40px;border-radius:11px;flex:0 0 auto;
+    background:linear-gradient(135deg,var(--vinho),var(--bordo));color:#fff;
+    display:flex;align-items:center;justify-content:center;
+    font-family:'Segoe UI',system-ui,-apple-system,Roboto,Helvetica,Arial,sans-serif;font-size:20px;font-weight:700;
+  }
+  .rsec-head h2{
+    font-family:'Segoe UI',system-ui,-apple-system,Roboto,Helvetica,Arial,sans-serif;font-size:26px;color:var(--bordo);font-weight:700;
+  }
+  .rsec-head .st{font-size:13px;color:#9a8087;font-weight:600}
+  .rsub{
+    font-size:12px;font-weight:800;letter-spacing:1.2px;text-transform:uppercase;
+    color:var(--dourado);margin:24px 0 6px;padding-bottom:6px;
+    border-bottom:1.5px solid var(--linha);
+  }
+  .qa{
+    background:#fff;border:1px solid var(--linha);border-radius:13px;
+    margin-top:12px;overflow:hidden;
+    transition:box-shadow .15s,border-color .15s;
+  }
+  .qa:hover{border-color:#E3C0C9;box-shadow:0 10px 24px -18px rgba(122,21,51,.5)}
+  .qa-toggle{
+    appearance:none;width:100%;text-align:left;cursor:pointer;font:inherit;
+    background:none;border:none;display:flex;gap:10px;align-items:flex-start;
+    padding:16px 18px;color:#3a2c31;font-weight:700;font-size:16px;line-height:1.4;
+  }
+  .qa-toggle .qi{color:var(--dourado);font-weight:800;flex:0 0 auto}
+  .qa-toggle .qtext{flex:1}
+  .qa-toggle .chev{
+    flex:0 0 auto;color:#9a8087;font-size:13px;margin-top:3px;
+    transition:transform .25s ease,color .15s;
+  }
+  .qa.open .qa-toggle .chev{transform:rotate(180deg);color:var(--bordo)}
+  .qa-toggle:focus-visible{outline:3px solid var(--dourado-cl);outline-offset:-3px}
+  .qa-body{display:grid;grid-template-rows:0fr;transition:grid-template-rows .3s ease}
+  .qa.open .qa-body{grid-template-rows:1fr}
+  .qa-body-inner{overflow:hidden}
+  .qa .a{font-size:14.5px;color:var(--cinza);line-height:1.62;padding:0 18px 16px 18px}
+  .qa .a b{color:var(--bordo)}
+
+  .reader-foot{
+    margin-top:44px;padding-top:24px;border-top:2px solid var(--linha);text-align:center;
+  }
+  .reader-foot p{font-size:12.5px;color:#9a8087;margin-bottom:16px}
+  .reader-cta{max-width:320px}
+
+  @media (max-width:520px){
+    .brand h1{font-size:24px}
+    .statement{font-size:18px}
+    .card{padding:22px 18px}
+    .choice{font-size:15px;padding:14px 10px}
+    .cover h1{font-size:30px}
+    .menu .greet{font-size:26px}
+    .paths{grid-template-columns:1fr}
+    .path{min-height:auto}
+    .toc{grid-template-columns:1fr}
+    .reader-head h1{font-size:30px}
+    .reader{padding:16px 16px 50px}
+  }
+  @media (prefers-reduced-motion:reduce){
+    *{transition:none!important}
+  }
+</style>
+</head>
+<body class="cover-mode">
+
+<!-- ================= TELA 1 · CAPA (NOME) ================= -->
+<section class="screen active" id="screen-cover">
+  <div class="cover">
+    <img class="logo-cover" src="data:image/png;base64,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" alt="Hemobrás" />
+    <div class="eyebrow">Hemobrás · Treinamento</div>
+    <h1>Treinamento Online<br>Conceitos de IA</h1>
+    <p class="lede">Chegou a hora de entender os conceitos de LLM, RAG e Agentes e sugerir sua proposta de IA.</p>
+    <div class="field">
+      <label for="nameInput">Nome Completo</label>
+      <input id="nameInput" type="text" autocomplete="name" maxlength="40"
+             placeholder="Digite seu nome completo" />
+      <div class="hint" id="nameHint">Usaremos apenas para personalizar sua experiência.</div>
+    </div>
+    <button class="btn-gold" id="enterBtn" disabled>Entrar <span aria-hidden="true">→</span></button>
+  </div>
+</section>
+
+<!-- ================= TELA 2 · MENU PRINCIPAL (2 CAMINHOS) ================= -->
+<section class="screen" id="screen-menu">
+  <div class="menu">
+    <div class="brandbar light">
+      <img src="data:image/png;base64,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" alt="Hemobrás" />
+      <span>Hemobrás</span>
+    </div>
+    <div class="greet">Olá, <span class="nm" id="greetName">participante</span> 👋</div>
+    <div class="sub">Aprenda os conceitos de IA e apresente sua ideia.</div>
+
+    <div class="paths paths-2">
+      <button class="path" id="pathTraining" type="button">
+        <div class="pico">🎓</div>
+        <h3>Fazer treinamento</h3>
+        <p>Vídeos, apresentação e lista de perguntas — tudo dentro da aplicação.</p>
+        <span class="cta">Abrir treinamento <span aria-hidden="true">→</span></span>
+      </button>
+
+      <button class="path locked" id="pathQuiz" type="button" aria-disabled="true">
+        <div class="pico">✏️</div>
+        <h3>Formulário final <span class="lock-ic" id="lockIc">🔒</span></h3>
+        <p id="quizDesc">Conclua o treinamento primeiro. Marque “treinamento concluído” dentro de <b>Fazer treinamento</b> para liberar o formulário e sugerir sua proposta de IA.</p>
+        <span class="cta" id="quizCta">Bloqueado</span>
+      </button>
+    </div>
+    <button class="back" id="backToCover">← Trocar de nome</button>
+  </div>
+</section>
+
+<!-- ================= TELA 2b · SUBMENU DE TREINAMENTO (3 CAMINHOS) ================= -->
+<section class="screen" id="screen-training">
+  <div class="menu">
+    <div class="brandbar light">
+      <img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAPAAAAC+CAYAAAALB4KOAAAACXBIWXMAAAsTAAALEwEAmpwYAAAMjUlEQVR4nO3dfYxcVRnH8QdoJVJIwIIFEUyMVhB5K0HDi2KMguA/5R+MIY0kGF4EeYkRQaOCEP0HkaCRSIgQjEhbwAiIQDCVl3b3nE53zhnWFlEC1O7eZ9pCW0iElrQ/c2EwvM3d3dOZe597+/sk59+d3afnO3fm3jsdESIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiej8APgDgZABXAbgDwJMAxgCsAdAC8ACAGwAsAnDwrjZFAPsA+BqA6wAsBTAKoAPg2QGt/GeNAFgC4NreY+0ju5j/jMaPdn1YlLlwg/r4gPrQUhfWZC6OZS4+mbl4R+bDVd1WOBmt1mzZ1QE4DsAtADZhZvINfCGAvaShAOzWC+lPALaifPlj3gvgjPx3kYbKQpgz6eO31UWnPmK6K3NxU+bCbydacYHsagAcCeChAWyy9QC+C6BRz4a9cPOjohURwOnSIGi1Zmc+fk9d3DCTcN93ufBg5tpHSNMBmAXgZwBeH/AGewrAMVJzAOYCuBt25S+x95Oam2jFBerjP3Y63HcekbdlPlyHZctmSRMB+DCA5UPcXK8COEdqCsACAC/Avufr/GSZjYZz1YXXBhnvO0L24fHJsbEDpEkAHArgnyVsrh0ArpSaAfBFAFtQH5sBnCI1oz7+YFjhvusl9dMTrfFDpQkA7N87m1ymy6UmABwP4BXUz8v5SUipiczHi0qJ9/8vqcO/dKQzTxrwnveJCjbXdgCninEADgKgqK9JAOY36eTKzhmZC9vLDLh3JP47lizZQ+qqd02xKt38fbfYvkz0KOrvITGs68YPHMiZ5uQVfiJ1BODTALZVvLluF6MAfBPN8Q0xKvPhD9XF+8ZReOtEq3OY1A2A+6veVb2TWseKMQD2BDCB5lib300nxkz6seMrjfet98M+3it1AuCoXjwWLBVjAJyP5vmWGJO5eI+JgF3YkfnwGakLAL+GHflNIweKIb37vJvGiyE60pmX+fh61fG+LeIbpQ4A7AFgA2z5jhgB4HA013wxQn28rOpo37Xyk6q7S02ua1pznxgB4FI018VihLrwoIFo37Fq8cGH/CYK2LNJjOh9HLCpFouRS3SZj1uqDvZ91qViXe/jgRaZeB8MYBzNFcWAjSvaBxuI9T0r8/FmsQ7Aw7DpBDGgprdNTtcWMaC7sn2S0YBN3/Tyht7/7GDRaQZms7uhy2vDsMPCiZpJH083GbALy8U6AG3YtNDAbPZC81X+v6ToaGeh0SNwW6wzHPCZBmbDgEugrn1m1bEyYAZcV9UfgR0DTsYjcOFseAQugTLgdAy4cDYMuATKgNMx4MLZMOASKANOx4ALZ8OAS6AMOB0DLpwNAy6BMuB0DLhwNgy4BMqA0zHgwtkw4BIoA07HgAtnw4BLoAw4HQMunA0DLoEy4HQMuHA2DLgEyoDTMeDC2TDgEigDTseAC2fDgEugDDgdAy6cDQMugTLgdAy4cDYMuATKgNMx4MLZMOASKANOx4ALZ8OAS6AMOB0DLpwNAy6BMuB0DLhwNgy4BMqA0zHgwtkw4BIoA07HgAtnw4BLoAw4HQMunA0DLoEy4HQMuHA2DLgEyoDTMeDC2TDgEigDTseAC2fDgEugDDgdAy6cDQMugTLgdAy4cDYMuATKgNMx4MLZMOASKANOx4ALZ8OAS6AMOB0DLpwNAy6BMuB0DLhwNgy4BMqA0zHgwtns3vsW+6banv+NUjFlwOkY8JTzeRnNtVkMUAacjgFPOZ8OmqstBigDTseAp5zPXWiuO8UAZcDpGPCU87kYzXWBGKAMOB0DnnI+n0Qz5SfnPi4GKANOx4CnNaNRNM9yMUIZcDoGPK0ZnYPmWSRGKANOx4CnNaPZAJ5Hc/wbwCwxQhlwOgY87TmdheZYKIYoA07HgGc0q/tQf/eKMcqA0zHgGc1qLoC1qK/nAOwnxigDTseAZzyvIwC8iPrZDOAoMUgZcDoGnDSzzwHYiPrYAOCzYpQy4HQMOHluhwF4GvatBjBfDFMGnI4B79Ts9gZwq9GPHOa/0y0A5ohxyoDTMeCdB+BkAE/AjscBnCg1oQw4HQMeHACfB3B7RZ8hzh/ztvzJRGpGGXA6Bjy0O7fyo/IVvZfYjwAYAdAa0Brp/cxbe4+RP9ZsqSllwOkYMFVNGXA6BkxVUwacjgFT1ZQBp2PAVDVlwOkYMFVNGXA6BkxVUwacjgFT1ZQBp2PAVDVlwOkY8HBlIczprhr/xORo57hBrvxn5j9bGkAZcDoGPFgTrdb+urJ9vvq4WF14QX3EUNebj7FYfee8dW71XKkhZcDpGPBg5EdFdWGpurB16NH2j3mr+rBkohUXSI0oA07HgHfOxhXtg988AlYUbd+Y4x83rFr1EakBZcDpGPBObLzRzkL14aXKY+2zMh+3ZK59lhinDDgdA06T+XBt1YFOK2IXdmQuXi2GKQNOx4ATNpyPN1UdZkLIN4pRyoDTMeAZbjYfflx1jMnLxR+KQcqA0zHg6Zv08fT8JWnlIaYfhbd3XThNjFEGnI4BT8/aFeMfUh+7VUe40xH7kG1qt/cVQ5QBp2PA05P5eHPV8Q1w3SSGKANOx4Cnts4/dUilN2gM+ijs4rbJVas+JkYoA07HgKeWn8GtOrqBR+zjL8QIZcDpGPAU82m1ZquL66sObgirm/9tYoAy4HQMeIrNtbLzFQOxDecoPBq+JAYoA07HgKfYXD7+vLEB+3CdGKAMOB0DLpb58GhzA44PiwHKgNMx4Kk2V1hbdWhDWy4+LwYoA07HgKfaXM25fPTeFV4VA5QBp2PA/Y2Pj3+g+siGuyyciVYGnI4B9zfRau1VdWDDXvnfKBVTBpyOAffHgMuhDDgdA+6PAZdDGXA6BtwfAy6HMuB0DLg/BlwOZcDpGHB/DLgcyoDTMeD+GHA5lAGnY8D9MeByKANOx4D7Y8DlUAacjgH3x4DLoQw4HQPujwGXQxlwOgbcHwMuhzLgdAy4PwZcDmXA6Rhwfwy4HMqA0zHg/hhwOZQBp2PA/THgcigDTseA+2PA5VAG3MiAF0rFGHCZX5QeYW1lPrbFOgAjsKnyb9EDsHudv41wyg3qwo78b7TwrY9qcz7LxToAD8OmE8SAzIVXqt5IQ9ugPm4RA7or2ycZnc9fxToAt8CmA8UA9XG86o00vA0aohiwcUX7YKMB3yzWAbgc9mwSI9SHJVVvpKEtF+8SAwDslrm4ufJ5vHddKtYBOB723CdG5P+IBjbSUFbm40VihLrwl6rn8e613odjxToAewDYAFsuFiMmWp3Dqt5IQ9ugLswXI9TYE2Xmg1o4wTctAH4FO14HME8MURdWVb2hBr5cdGKIjnTmZT6+biZgF34pdQHgSAD5JQULlogx6jvnVb2hBr5BR8O5Ykzm4t1G4t2eufYRUicA/lx1ub0nkaPFmGeeeWbPzMd1VW+sgS0XXsi/NkaMmRztHGfhunvm4j1SNwDmA3it4oB/J0Z1fVhU9cYa2Ab14etiVObi7yt+ctu6zsdPSR0BuKbCePOTBgeIUW9e6giPVB3fADbog2KYjnTmqYvrK5zPj6SuAMwC8FgF8W4H8GUx7o0TLS5OVh5h4srfBkyOjZl9knxL14XT8vehFczob1iyZA+pMwBzAawpOeBLpCZ0pHOU0ZsOpog3vDzRigukJrouXFjyk9szdXhymxYAhwJ4uqSTVldIzUz6zil1ijhzcdOki1+QmslcuLKUk1ourFnnnzpEmgTA/gAeH2K8/wWwSGqq69rHqI/P2Y83PJu/apCaylw8R314dXjxxmXr3Oq50kS998Q/BbBtwPGG/Nqz1NwLT3T2y+8nNhzvnZva7X2l5rqjTx2dudAZ8FF3a+bi1bV/zzsdAA4HcP8AbvbIzzRfkj8xSIN0R9un5h/+rjrYt23OVeo75k8KzgSWLZulPl6mPnZ38klth7p4X36LrOxqABwD4GYAL80w3OUAzgfwQWmo/DJT/sH0N+4mcuG1CqJ9TV1Y2nXhq/nvIg010WrtpS5ckPmwYmYzCi9mPv4mP5rLrq730vpEAN8HcHvv0tMYgNUAfP5pIgDXAzgbwEGyi+mOj+/di/ka9XFx/j875C8B8/ejA1k+xPxnvvmz4zV5tFkIc2QXs77VOkhd5+zMx+vVx/vVRa8+rM5cHFMfHlMfbstG4xXqOifkR/Cqf18iIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIrHpf8uX84TGCV/3AAAAAElFTkSuQmCC" alt="Hemobrás" />
+      <span>Hemobrás</span>
+    </div>
+    <div class="greet">Materiais de treinamento</div>
+    <div class="sub">Aprenda os conceitos e apresente uma proposta de IA para Hemobras.</div>
+
+    <div class="paths">
+      <button class="path" id="tVideo" type="button">
+        <div class="pico">▶️</div>
+        <h3>Vídeos</h3>
+        <p>Aulas sobre LLM, RAG e Agentes, mais exemplos práticos de uso na Hemobrás — tudo numa lista só.</p>
+        <span class="cta">Assistir <span aria-hidden="true">→</span></span>
+      </button>
+
+      <button class="path" id="tApres" type="button">
+        <div class="pico">📊</div>
+        <h3>Apresentação</h3>
+        <p>Os slides do workshop, com conceitos e oportunidades de IA.</p>
+        <span class="cta">Abrir slides <span aria-hidden="true">→</span></span>
+      </button>
+
+      <button class="path" id="tFaq" type="button">
+        <div class="pico">📖</div>
+        <h3>Lista de perguntas</h3>
+        <p>O material de apoio com perguntas e respostas, das mais comuns às mais difíceis.</p>
+        <span class="cta">Abrir a lista <span aria-hidden="true">→</span></span>
+      </button>
+    </div>
+
+    <div class="complete-box">
+      <label class="check-line">
+        <input type="checkbox" id="doneCheck" />
+        <span class="checkmark" aria-hidden="true"></span>
+        <span class="check-text">Concluí o treinamento e quero preencher o formulário final.</span>
+      </label>
+      <button class="btn-gold quiz-go" id="goQuiz" disabled>Abrir o formulário →</button>
+      <p class="quiz-hint" id="quizHintTxt">Marque a caixa acima para liberar o formulário.</p>
+    </div>
+
+    <button class="back" id="trainingBack">← Voltar ao início</button>
+  </div>
+</section>
+
+<!-- ================= TELA · VÍDEO (player grande + lista de aulas) ================= -->
+<section class="screen" id="screen-video">
+  <div class="reader">
+    <div class="reader-top">
+      <button class="rtop-back" id="videoBack">← Voltar aos materiais</button>
+      <a class="rtop-quiz" id="videoNewTab" href="#" target="_blank" rel="noopener">Abrir em nova aba ↗</a>
+    </div>
+
+    <header class="reader-head">
+      <div class="mini-brand"><img src="data:image/png;base64,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" alt="Hemobrás" /><span>Hemobrás</span></div>
+      <div class="eyebrow">Treinamento Hemobrás · Vídeos</div>
+      <h1>Vídeos</h1>
+      <p class="reader-lede">Aulas sobre LLM, RAG e Agentes, e exemplos práticos de uso na Hemobrás. Escolha um vídeo na lista ao lado.</p>
+    </header>
+
+    <div class="video-layout">
+      <div class="video-main">
+        <div class="viewer-frame ratio-video" id="videoFrame">
+          <!-- iframe injetado via JS -->
+        </div>
+      </div>
+      <nav class="video-list" id="videoList" aria-label="Lista de aulas">
+        <!-- itens injetados via JS -->
+      </nav>
+    </div>
+
+    <div class="reader-foot">
+      <p>Treinamento Hemobrás · GTIC · Hemobrás</p>
+      <button class="btn-gold reader-cta" id="videoToMaterials">Voltar aos materiais →</button>
+    </div>
+  </div>
+</section>
+
+<!-- ================= TELA · VISUALIZADOR (iframe: slides / faq) ================= -->
+<section class="screen" id="screen-viewer">
+  <div class="reader">
+    <div class="reader-top">
+      <button class="rtop-back" id="viewerBack">← Voltar aos materiais</button>
+      <a class="rtop-quiz" id="viewerNewTab" href="#" target="_blank" rel="noopener">Abrir em nova aba ↗</a>
+    </div>
+
+    <header class="reader-head">
+      <div class="mini-brand"><img src="data:image/png;base64,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" alt="Hemobrás" /><span>Hemobrás</span></div>
+      <div class="eyebrow" id="viewerEyebrow">Treinamento</div>
+      <h1 id="viewerTitle">Material</h1>
+      <p class="reader-lede" id="viewerLede"></p>
+    </header>
+
+    <div class="viewer-frame" id="viewerFrame">
+      <!-- iframe injetado via JS -->
+    </div>
+
+    <div class="reader-foot">
+      <p>Treinamento Hemobrás · GTIC · Hemobrás</p>
+      <button class="btn-gold reader-cta" id="viewerToMaterials">Voltar aos materiais →</button>
+    </div>
+  </div>
+</section>
+
+<!-- ================= TELA · LISTA DE PERGUNTAS (acordeão) ================= -->
+<section class="screen" id="screen-faq">
+  <div class="reader">
+    <div class="reader-top">
+      <button class="rtop-back" id="faqBack">← Voltar aos materiais</button>
+      <div style="display:flex;gap:8px">
+        <button class="rtop-back" id="faqCollapseAll">Fechar todas</button>
+        <button class="rtop-back" id="faqExpandAll">Abrir todas</button>
+      </div>
+    </div>
+
+    <header class="reader-head">
+      <div class="mini-brand"><img src="data:image/png;base64,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" alt="Hemobrás" /><span>Hemobrás</span></div>
+      <div class="eyebrow">Treinamento Hemobrás · Material de apoio</div>
+      <h1>Lista de perguntas</h1>
+      <p class="reader-lede">Perguntas e respostas sobre LLM, RAG e Agentes, das mais comuns às mais difíceis. Clique em uma pergunta para ver a resposta.</p>
+    </header>
+
+    <nav class="toc">
+      <a href="#faq-sec-1"><span class="tnum">1</span> LLM (Modelos de Linguagem)</a>
+      <a href="#faq-sec-2"><span class="tnum">2</span> RAG (Busca em Documentos)</a>
+      <a href="#faq-sec-3"><span class="tnum">3</span> Agentes de IA</a>
+      <a href="#faq-sec-4"><span class="tnum">4</span> IA Preditiva</a>
+    </nav>
+
+    <div id="faqApp"></div>
+
+    <div class="reader-foot">
+      <p>Treinamento Hemobrás · Marco Aurélio — Analista · GTIC · Hemobrás</p>
+      <button class="btn-gold reader-cta" id="faqToMaterials">Voltar aos materiais →</button>
+    </div>
+  </div>
+</section>
+
+<!-- ================= TELA 3 · QUIZ ================= -->
+<section class="screen" id="screen-quiz">
+  <div class="wrap">
+
+    <div class="brand">
+      <div class="mini-brand"><img src="data:image/png;base64,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" alt="Hemobrás" /><span>Hemobrás</span></div>
+      <div class="whoami" id="whoami"></div>
+      <div class="eyebrow">Treinamento Hemobrás · Formulário final</div>
+      <h1>Sugira sua ideia de IA</h1>
+   </div>
+
+    <div class="form-embed">
+      <iframe src="https://docs.google.com/forms/d/e/1FAIpQLSepoSFj89B48Sg12n0D83Eo8TGfh_bDJ7DyiX3hLTCwdiizQQ/viewform?embedded=true" title="Formulário de sugestão de IA" frameborder="0" marginheight="0" marginwidth="0">Carregando…</iframe>
+    </div>
+
+    <button class="back" id="backToMenu" style="color:#9a8087;background:none;border:none;font:inherit;font-size:13px;cursor:pointer;text-decoration:underline;margin-top:18px;display:block">← Voltar ao menu</button>
+
+    <div class="foot">Material de apoio · GTIC · Hemobrás</div>
+  </div>
+</section>
+
+<script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/pdfjs-dist@3.11.174/build/pdf.min.js"></script>
+<script>
+/* ==========================================================
+   LISTA DE PERGUNTAS (acordeão) — LLM, RAG, Agentes
+   ========================================================== */
+const FAQ_DATA = [
+  {
+    num: 1,
+    title: "LLM (Modelos de Linguagem)",
+    subsections: [
+      {
+        label: "Perguntas fáceis (quase sempre surgem)",
+        items: [
+          {q:`O que é um LLM, em uma frase?`, a:`É um programa treinado em enormes quantidades de texto que aprendeu a prever a próxima palavra mais provável — e com isso lê, escreve, resume, traduz e explica. ChatGPT, Claude e Gemini são exemplos.`},
+          {q:`LLM é a mesma coisa que ChatGPT?`, a:`ChatGPT é um produto; o LLM é o motor por trás dele. É como "carro" e "motor": o ChatGPT é o carro que a maioria conhece, mas existem vários motores (modelos) e vários carros construídos sobre eles.`},
+          {q:`Ele "pensa" ou "entende" de verdade?`, a:`Não no sentido humano. Ele não tem consciência nem intenção — calcula qual continuação de texto é mais provável. O resultado parece compreensão porque foi treinado em praticamente tudo que já escrevemos, mas por baixo é estatística de linguagem.`},
+          {q:`Por que às vezes ele inventa coisas?`, a:`É a chamada "alucinação". Como ele sempre tenta produzir a resposta mais plausível, quando não tem a informação ele preenche a lacuna com algo que soa correto. O perigo é que soa convincente mesmo quando está errado — por isso toda saída crítica precisa de verificação.`},
+          {q:`Ele conhece os dados da Hemobrás?`, a:`Não. Um LLM "puro" só sabe o que estava nos textos públicos do treinamento. Ele nunca leu nossos POPs, registros de bolsas, validações ou dados de doadores. Para que ele responda sobre isso, é preciso entregar esses documentos a ele — e é aí que entra o RAG (parte 2).`},
+          {q:`Preciso saber programar para usar?`, a:`Não. Você conversa em português normal. A habilidade que importa é saber pedir bem — dar contexto, papel, formato e foco. Isso se chama "prompt" e é o que mais influencia a qualidade da resposta.`},
+          {q:`É seguro colocar informação da empresa numa dessas ferramentas?`, a:`Depende da ferramenta e do contrato. Ferramentas gratuitas de uso pessoal podem usar o que você digita. Em ambiente corporativo usa-se versões com garantia de que os dados não são reaproveitados. Regra prática: dado sensível só em ferramenta homologada pela área de TI/segurança.`},
+          {q:`O LLM vai substituir funcionários?`, a:`A leitura mais realista é que ele substitui tarefas, não pessoas — especialmente as repetitivas e textuais. Quem conhece o processo passa a fazer mais, mais rápido. O julgamento técnico e regulatório continua sendo humano.`},
+        ]
+      },
+      {
+        label: "Perguntas difíceis (céticos e técnicos)",
+        items: [
+          {q:`Se ele só prevê a próxima palavra, como pode resolver algo complexo?`, a:`Porque "prever a próxima palavra" em uma escala gigantesca exige capturar padrões de raciocínio, estrutura e conhecimento presentes no texto. Não é mágica nem consciência: é que a linguagem carrega muita lógica embutida, e o modelo aprendeu a reproduzi-la. Ainda assim, falha em lógica exata, contas e regras rígidas — para isso usam-se ferramentas externas.`},
+          {q:`Como eu confio numa tecnologia que erra e ainda soa segura?`, a:`Você não confia cegamente — você desenha o processo para não depender de confiança cega. Três camadas: (1) usar RAG para prender a resposta a documentos reais e citáveis; (2) manter o humano revisando o que é crítico; (3) medir a taxa de erro em um piloto antes de ampliar. Em ambiente GxP, rastreabilidade importa mais que a resposta em si.`},
+          {q:`Qual a diferença entre os modelos (GPT, Claude, Gemini, open-source)?`, a:`Variam em capacidade, custo, velocidade, tamanho de contexto (quanto texto leem de uma vez) e em poderem ou não rodar dentro da nossa infraestrutura. Modelos open-source podem ser hospedados internamente, o que ajuda em confidencialidade; modelos de ponta costumam ser mais capazes, mas rodam na nuvem do fornecedor. A escolha é um trade-off entre capacidade, custo e governança de dados.`},
+          {q:`O que é "janela de contexto" e por que devo me importar?`, a:`É o quanto de texto o modelo consegue considerar de uma vez — pergunta mais documentos anexados. Se um dossiê é maior que a janela, ele não "enxerga" tudo simultaneamente, e é preciso quebrar ou usar RAG para buscar só os trechos relevantes. Importa porque define que tarefas são viáveis sem engenharia extra.`},
+          {q:`Esses modelos têm viés? Isso é risco regulatório?`, a:`Sim, podem reproduzir vieses presentes nos dados de treinamento. Em decisões que afetem pessoas (ex.: triagem, priorização) isso é risco real e exige supervisão humana, testes e documentação. A recomendação é usar IA como apoio à decisão, nunca como decisor autônomo em processos sensíveis.`},
+          {q:`Como isso se encaixa em validação de sistemas computadorizados (CSV/GAMP)?`, a:`Um ponto genuinamente complexo. Sistemas que impactam qualidade do produto ou dados GxP tendem a exigir validação, e a natureza não-determinística do LLM (a mesma pergunta pode gerar respostas ligeiramente diferentes) desafia abordagens tradicionais. O caminho prático hoje é validar o processo em volta — controles, revisão humana, registros — e restringir o uso autônomo. Vale envolver Garantia da Qualidade cedo.`},
+          {q:`E a LGPD, com dados de doadores e pacientes?`, a:`Dado de saúde é dado sensível sob a LGPD. Não deve trafegar para ferramentas não homologadas, e o princípio da minimização vale: só use o dado estritamente necessário. Em muitos casos a solução é trabalhar com dados anonimizados ou manter tudo em infraestrutura controlada. Envolver o encarregado de dados (DPO) é parte do desenho.`},
+          {q:`Isso não é só hype que vai passar?`, a:`A tecnologia tem limitações reais e há exagero no mercado — as duas coisas são verdade. Mas o ganho em tarefas de linguagem já é concreto e mensurável. A postura madura não é adotar tudo nem ignorar: é rodar pilotos pequenos, medir valor real e escalar só o que se provar. Este treinamento serve justamente para separar oportunidade de moda.`},
+        ]
+      },
+    ]
+  },
+  {
+    num: 2,
+    title: "RAG (Busca em Documentos)",
+    subsections: [
+      {
+        label: "Perguntas fáceis (quase sempre surgem)",
+        items: [
+          {q:`O que significa RAG?`, a:`Retrieval-Augmented Generation — "geração de resposta com busca". Antes de responder, o sistema procura nos nossos documentos os trechos relevantes e entrega ao LLM como base. A resposta passa a vir dos nossos arquivos, não da internet.`},
+          {q:`Qual a analogia mais simples?`, a:`Uma prova com consulta. O aluno é inteligente (o LLM), mas em vez de responder de memória, ele consulta o manual (os nossos documentos) antes de escrever. Assim erra menos e pode citar a fonte.`},
+          {q:`Por que não basta o LLM sozinho?`, a:`Porque o LLM não conhece a Hemobrás. Perguntar a ele sobre um POP nosso é como perguntar a um gênio que nunca entrou na nossa planta. O RAG dá a ele o acesso ao nosso conhecimento interno.`},
+          {q:`Que tipo de documento serve?`, a:`Praticamente qualquer texto: POPs, instruções de trabalho, registros, manuais, dossiês regulatórios, e-mails, relatórios de desvio, bulas. Se está escrito e é acessível, pode alimentar um RAG.`},
+          {q:`Ele fica sabendo quando eu atualizo um documento?`, a:`Sim — essa é uma das grandes vantagens. Atualizou o POP? A resposta passa a refletir a versão nova, sem precisar "re-treinar" nada. O conhecimento fica vivo.`},
+          {q:`A resposta diz de onde tirou a informação?`, a:`Sim, e isso é decisivo para nós. Um bom RAG cita o documento e a seção de origem, o que torna a resposta auditável e rastreável — exatamente o que um ambiente regulado exige.`},
+        ]
+      },
+      {
+        label: "Perguntas difíceis (céticos e técnicos)",
+        items: [
+          {q:`O RAG elimina as alucinações?`, a:`Reduz muito, mas não elimina. Ele prende a resposta aos documentos recuperados, o que corta boa parte das invenções. Porém, se a busca trouxer o trecho errado, ou se o documento for ambíguo, o modelo ainda pode compor algo impreciso. Por isso a citação da fonte é essencial: ela permite conferir.`},
+          {q:`E se ele buscar o trecho errado? Como sei que achou o certo?`, a:`Esse é o calcanhar do RAG: a qualidade da resposta depende da qualidade da busca. Documentos bem organizados, versionados e sem duplicatas melhoram muito o resultado. Na prática, mede-se a precisão em um conjunto de perguntas-teste e ajusta-se antes de liberar. A citação da fonte dá ao usuário a chance de validar cada resposta.`},
+          {q:`Como ele lida com versões conflitantes de um mesmo POP?`, a:`Só lida bem se a base estiver organizada para isso — marcando qual é a versão vigente e removendo ou sinalizando as obsoletas. Se jogarmos tudo junto sem controle, ele pode misturar versões. Ou seja, RAG expõe a maturidade da nossa gestão documental: quanto melhor o controle de documentos, melhor a resposta.`},
+          {q:`Onde os documentos ficam? Saem da Hemobrás?`, a:`Não precisam sair. O RAG pode ser montado inteiramente em infraestrutura controlada, com os documentos permanecendo nos nossos repositórios. O que se envia ao modelo é apenas o trecho necessário para responder — e mesmo isso pode ser feito com modelos hospedados internamente quando a sensibilidade exige.`},
+          {q:`Isso é o mesmo que um buscador (tipo pesquisa no SharePoint)?`, a:`Não. Um buscador devolve uma lista de documentos para você ler; o RAG lê os documentos por você e entrega uma resposta redigida, com a fonte. É a diferença entre "aqui estão os 40 POPs que mencionam umidade" e "a especificação de umidade do produto X é Y%, conforme o POP 123, seção 4".`},
+          {q:`Como controlo quem pode ver o quê? (permissões)`, a:`Um RAG corporativo bem feito respeita as permissões existentes: cada usuário só recebe respostas baseadas nos documentos que ele já tem direito de acessar. Isso precisa ser desenhado explicitamente — não é automático — e é um requisito importante quando há dados sensíveis ou de acesso restrito.`},
+          {q:`Qual o custo e o esforço de manter isso?`, a:`Há o custo de processar os documentos, o de cada consulta ao modelo e o esforço contínuo de manter a base organizada e atualizada. O maior "custo" costuma ser a curadoria documental, não a tecnologia. Por isso se começa com um domínio bem delimitado (ex.: só os POPs de uma área) antes de ampliar.`},
+        ]
+      },
+    ]
+  },
+  {
+    num: 3,
+    title: "Agentes de IA",
+    subsections: [
+      {
+        label: "Perguntas fáceis (quase sempre surgem)",
+        items: [
+          {q:`O que é um agente de IA?`, a:`É uma IA que, em vez de só responder, recebe um objetivo, planeja os passos, usa ferramentas (sistemas, planilhas, buscas) e executa a tarefa até concluir. Sai do "responder" para o "fazer".`},
+          {q:`Qual a diferença entre um agente e o ChatGPT comum?`, a:`O ChatGPT responde e para — você decide o próximo passo. O agente encadeia passos sozinho: busca, analisa, escreve, salva. É a diferença entre um assistente que responde perguntas e um estagiário que executa uma tarefa de ponta a ponta.`},
+          {q:`Dá um exemplo prático para a nossa realidade?`, a:`Um agente que, todo mês, coleta os desvios em vários sistemas, agrupa por causa raiz, calcula os indicadores e gera o rascunho do relatório — e o analista apenas revisa e aprova. Dias de trabalho manual viram minutos, com o humano no controle final.`},
+          {q:`Ele age sozinho sem me avisar?`, a:`Só se você deixar. A autonomia é ajustável, como um botão de volume: pode ir de "só sugere, você executa" até "executa sozinho dentro de limites". Em ambiente regulado, começa-se sempre com o humano aprovando cada passo crítico.`},
+          {q:`Preciso de um agente ou um chat resolve?`, a:`Se a tarefa é responder ou consultar algo, um LLM ou RAG basta. Agente só se justifica quando há vários passos e uso de sistemas — montar relatórios, cruzar dados de fontes diferentes, disparar rotinas. Mais poder traz mais complexidade e mais risco.`},
+        ]
+      },
+      {
+        label: "Perguntas difíceis (céticos e técnicos)",
+        items: [
+          {q:`Se o agente age sozinho, quem responde por um erro dele?`, a:`A responsabilidade continua sendo da organização e das pessoas que o supervisionam — a IA não assume responsabilidade legal. Por isso o desenho correto mantém um humano responsável no circuito em qualquer passo que afete qualidade, segurança ou dados regulados, com registro de quem aprovou o quê. Autonomia total em processo GxP é, hoje, a exceção rara e cuidadosamente justificada.`},
+          {q:`O que impede o agente de fazer algo que não devia?`, a:`Limites definidos por projeto: a quais sistemas ele tem acesso, que ações pode executar, onde precisa pedir aprovação e quando deve parar. São "trilhos" configurados por quem constrói o agente. Um agente bem feito é restrito por padrão — ele só pode o que foi explicitamente permitido.`},
+          {q:`Como valido um processo em que a IA toma decisões?`, a:`Valida-se o processo em volta, não a "mente" da IA: define-se claramente entradas, limites, pontos de aprovação humana e registros; testa-se com casos conhecidos; e mede-se o resultado. Quanto mais crítico, menor a autonomia liberada e mais forte a supervisão. Envolver Garantia da Qualidade desde o desenho é indispensável.`},
+          {q:`Ele "aprende" com o que faz e muda o comportamento sozinho?`, a:`Em geral, não — o modelo por trás fica fixo entre atualizações; o agente não reescreve a si mesmo a cada execução. Isso é bom para previsibilidade e validação. Se houver algum mecanismo de aprendizado contínuo, ele precisa ser tratado como uma mudança controlada, com o rigor que qualquer alteração em sistema validado exige.`},
+          {q:`Vários passos encadeados não acumulam erro?`, a:`Sim, esse é um risco real: um erro pequeno no passo 1 pode se propagar. Mitiga-se com verificações entre etapas, pontos de aprovação humana e mantendo os agentes com escopo estreito. Quanto mais longa e autônoma a cadeia, mais pontos de controle ela exige — o que também limita o quão "solto" faz sentido deixá-lo.`},
+          {q:`Qual a diferença entre um agente e uma automação (RPA/script) comum?`, a:`Uma automação tradicional segue regras fixas: se A, faça B. O agente decide o caminho diante de situações que não foram roteirizadas, interpretando linguagem e contexto. É mais flexível, mas também menos previsível — por isso não substitui automação simples onde as regras já são claras; ele brilha onde há variação e julgamento textual.`},
+          {q:`Isso é caro e difícil de manter?`, a:`Agentes são o mais complexo dos três: mais integrações, mais pontos de falha, mais supervisão. Custam mais para construir e manter que um RAG ou um uso simples de LLM. A recomendação é não começar por agentes — provar valor com casos de LLM/RAG primeiro e só então partir para automação agêntica onde o ganho justifique a complexidade.`},
+        ]
+      },
+    ]
+  },
+  {
+    num: 4,
+    title: "IA Preditiva (Dados Históricos)",
+    subsections: [
+      {
+        label: "Perguntas fáceis (quase sempre surgem)",
+        items: [
+          {q:`O que é IA preditiva, em uma frase?`, a:`É o uso de dados históricos para treinar um modelo que estima a chance de um evento futuro — por exemplo, o risco associado a um exame com base no histórico do doador. Diferente do LLM, ela não gera texto: devolve um número, uma probabilidade ou uma classificação.`},
+          {q:`É a mesma coisa que os LLMs (ChatGPT, Claude)?`, a:`Não. LLMs trabalham com linguagem; IA preditiva trabalha com dados estruturados (planilhas, registros, exames) e aprende padrões estatísticos entre variáveis. São famílias diferentes de IA e podem até ser combinadas — um agente pode chamar um modelo preditivo como ferramenta.`},
+          {q:`Que tipo de dado ela precisa?`, a:`Histórico organizado e rotulado: exames anteriores, resultados conhecidos, desfechos já confirmados. Quanto mais completo e consistente o histórico, melhor a previsão — dado incompleto ou mal registrado é a principal causa de um modelo fraco.`},
+          {q:`Dá um exemplo prático para a Hemobrás?`, a:`Usar o histórico de exames e diagnósticos para sinalizar, com antecedência, casos com maior probabilidade de um determinado resultado — apoiando, não substituindo, a decisão do profissional responsável.`},
+        ]
+      },
+      {
+        label: "Perguntas difíceis (céticos e técnicos)",
+        items: [
+          {q:`Como confiar numa previsão que pode estar errada?`, a:`Todo modelo preditivo tem uma taxa de erro conhecida, medida antes de ir para produção (sensibilidade, especificidade, matriz de confusão). A previsão é usada como apoio à decisão, com um profissional validando o caso — nunca como diagnóstico automático e final.`},
+          {q:`Viés nos dados históricos passa para o modelo?`, a:`Sim, diretamente. Se o histórico usado no treino tem viés — por exemplo, sub-representação de algum grupo — o modelo reproduz e pode até amplificar esse viés. Por isso a base de treino precisa ser auditada antes de qualquer uso clínico ou regulatório.`},
+          {q:`Como isso se valida num ambiente GxP?`, a:`Como qualquer modelo estatístico usado em decisão de saúde: com validação documentada, conjunto de teste separado do treino, métricas de desempenho registradas e revisão periódica — o mesmo rigor exigido de qualquer método analítico validado.`},
+          {q:`Qual a diferença entre IA preditiva e IA generativa (LLM)?`, a:`A preditiva estima algo sobre o futuro a partir do passado — um número, uma classe. A generativa cria conteúdo novo — texto, resumo, resposta. Uma responde "qual a chance de X?"; a outra responde "escreva ou explique Y". São capacidades complementares, não concorrentes.`},
+        ]
+      },
+    ]
+  },
+];
+
+let faqRendered = false;
+
+function renderFaq(){
+  const app = document.getElementById('faqApp');
+  app.innerHTML = FAQ_DATA.map(sec=>{
+    const totalQ = sec.subsections.reduce((n,s)=>n+s.items.length, 0);
+    const subsHtml = sec.subsections.map(sub=>{
+      const itemsHtml = sub.items.map((item,i)=>`
+        <div class="qa">
+          <button class="qa-toggle" type="button" aria-expanded="false">
+            <span class="qi">${i+1}.</span>
+            <span class="qtext">${item.q}</span>
+            <span class="chev" aria-hidden="true">▾</span>
+          </button>
+          <div class="qa-body">
+            <div class="qa-body-inner">
+              <p class="a">${item.a}</p>
+            </div>
+          </div>
+        </div>
+      `).join('');
+      return `<div class="rsub">${sub.label}</div>${itemsHtml}`;
+    }).join('');
+    return `
+      <div class="rsec" id="faq-sec-${sec.num}">
+        <div class="rsec-head">
+          <div class="rn">${sec.num}</div>
+          <div>
+            <h2>${sec.title}</h2>
+            <div class="st">${totalQ} perguntas</div>
+          </div>
+        </div>
+        ${subsHtml}
+      </div>
+    `;
+  }).join('');
+
+  app.querySelectorAll('.qa-toggle').forEach(btn=>{
+    btn.addEventListener('click', ()=>{
+      const qa = btn.closest('.qa');
+      const isOpen = qa.classList.toggle('open');
+      btn.setAttribute('aria-expanded', isOpen ? 'true' : 'false');
+    });
+  });
+}
+
+function openFaq(){
+  if(!faqRendered){ renderFaq(); faqRendered = true; }
+  showScreen('faq');
+}
+
+/* ==========================================================
+   CONTROLE DE TELAS (capa -> menu -> quiz)
+   ========================================================== */
+let participantName = "";
+
+const screens = {
+  cover:    document.getElementById('screen-cover'),
+  menu:     document.getElementById('screen-menu'),
+  training: document.getElementById('screen-training'),
+  video:    document.getElementById('screen-video'),
+  viewer:   document.getElementById('screen-viewer'),
+  faq:      document.getElementById('screen-faq'),
+  quiz:     document.getElementById('screen-quiz'),
+};
+
+function showScreen(name){
+  Object.values(screens).forEach(s=>s.classList.remove('active'));
+  screens[name].classList.add('active');
+  // fundo bordô cheio na capa, no menu e no submenu de treinamento; papel claro no visualizador e no quiz
+  document.body.classList.toggle('cover-mode', name === 'cover' || name === 'menu' || name === 'training');
+  // ao sair do visualizador, esvazia o iframe/canvas (pausa vídeo / descarrega documento)
+  if(name !== 'viewer'){
+    const vf = document.getElementById('viewerFrame');
+    if(vf) vf.innerHTML = '';
+    pdfClose();
+  }
+  // ao sair da tela de vídeo, esvazia o player (pausa a reprodução)
+  if(name !== 'video'){
+    const vidf = document.getElementById('videoFrame');
+    if(vidf) vidf.innerHTML = '';
+  }
+  window.scrollTo(0,0);
+}
+
+// --- Capa: capturar nome e entrar ---
+const nameInput = document.getElementById('nameInput');
+const nameHint  = document.getElementById('nameHint');
+const enterBtn  = document.getElementById('enterBtn');
+
+const DEFAULT_HINT = "Usaremos apenas para personalizar sua experiência.";
+
+// remove acentos, uniformiza caixa e espaços para comparação tolerante
+function normalizeName(s){
+  return s.normalize('NFD').replace(/[\u0300-\u036f]/g,'')
+    .toUpperCase().replace(/\s+/g,' ').trim();
+}
+
+let authorizedNames = null;    // null = carregando; array = pronto para validar
+let authorizedLoadFailed = false;
+
+async function loadAuthorizedNames(){
+  try{
+    const res = await fetch('pessoas.xlsx');
+    if(!res.ok) throw new Error('HTTP ' + res.status);
+    const buf = await res.arrayBuffer();
+    const wb = XLSX.read(buf, {type:'array'});
+    const sheet = wb.Sheets[wb.SheetNames[0]];
+    const rows = XLSX.utils.sheet_to_json(sheet, {header:1});
+    authorizedNames = rows
+      .map(r => (r[0] ?? '').toString().trim())
+      .filter(Boolean)
+      .map(normalizeName);
+    nameHint.textContent = DEFAULT_HINT;
+    nameHint.classList.remove('err');
+    enterBtn.disabled = false;
+  } catch(err){
+    authorizedLoadFailed = true;
+    nameHint.textContent = "Não foi possível carregar a lista de participantes. Acesse esta página por um servidor web (não como arquivo local) e recarregue.";
+    nameHint.classList.add('err');
+  }
+}
+
+function enter(){
+  const val = nameInput.value.trim();
+  if(val.length < 2){
+    nameHint.textContent = "Por favor, digite seu nome para continuar.";
+    nameHint.classList.add('err');
+    nameInput.focus();
+    return;
+  }
+  if(authorizedLoadFailed){
+    nameHint.textContent = "Lista de participantes indisponível. Recarregue a página.";
+    nameHint.classList.add('err');
+    return;
+  }
+  if(!authorizedNames) return; // lista ainda carregando
+
+  const normInput = normalizeName(val);
+  const autorizado = authorizedNames.includes(normInput);
+  if(!autorizado){
+    nameHint.textContent = "Seu nome não consta na lista de autorizados, procurar a GGP.";
+    nameHint.classList.add('err');
+    nameInput.focus();
+    return;
+  }
+
+  participantName = val;
+  // primeiro nome, com inicial maiúscula
+  const first = val.split(/\s+/)[0];
+  const nice = first.charAt(0).toUpperCase() + first.slice(1);
+  document.getElementById('greetName').textContent = nice;
+  document.getElementById('whoami').innerHTML = 'Participante: <b>'+val.replace(/</g,'&lt;')+'</b>';
+  showScreen('menu');
+}
+
+enterBtn.addEventListener('click', enter);
+nameInput.addEventListener('keydown', e=>{
+  if(e.key === 'Enter') enter();
+});
+nameInput.addEventListener('input', ()=>{
+  if(authorizedLoadFailed) return;
+  nameHint.textContent = DEFAULT_HINT;
+  nameHint.classList.remove('err');
+});
+
+nameHint.textContent = "Carregando lista de participantes...";
+loadAuthorizedNames();
+
+// --- Navegação principal ---
+let quizUnlocked = false;
+
+function startQuiz(){
+  if(!quizUnlocked) return;
+  showScreen('quiz');
+}
+
+const pathQuiz = document.getElementById('pathQuiz');
+
+function unlockQuiz(){
+  if(quizUnlocked) return;
+  quizUnlocked = true;
+  pathQuiz.classList.remove('locked');
+  pathQuiz.classList.add('unlocked','pulse');
+  pathQuiz.setAttribute('aria-disabled','false');
+  document.getElementById('lockIc').textContent = '';
+  document.getElementById('quizDesc').textContent =
+    'Preencha o formulário final para concluir o treinamento e sugerir sua ideia de IA.';
+  document.getElementById('quizCta').innerHTML = 'Abrir o formulário <span aria-hidden="true">→</span>';
+  setTimeout(()=>pathQuiz.classList.remove('pulse'), 1200);
+}
+
+// checkbox "treinamento concluído" no submenu
+const doneCheck = document.getElementById('doneCheck');
+const goQuiz = document.getElementById('goQuiz');
+const quizHintTxt = document.getElementById('quizHintTxt');
+
+doneCheck.addEventListener('change', ()=>{
+  if(doneCheck.checked){
+    goQuiz.disabled = false;
+    quizHintTxt.textContent = 'Pronto! Você já pode abrir o formulário.';
+    quizHintTxt.classList.add('ready');
+    unlockQuiz();
+  } else {
+    goQuiz.disabled = true;
+    quizHintTxt.textContent = 'Marque a caixa acima para liberar o formulário.';
+    quizHintTxt.classList.remove('ready');
+  }
+});
+goQuiz.addEventListener('click', ()=>{ if(!goQuiz.disabled) startQuiz(); });
+
+pathQuiz.addEventListener('click', ()=>{ if(quizUnlocked) startQuiz(); });
+document.getElementById('pathTraining').addEventListener('click', ()=>showScreen('training'));
+
+document.getElementById('backToCover').addEventListener('click', ()=>{
+  showScreen('cover');
+  nameInput.focus();
+});
+document.getElementById('backToMenu').addEventListener('click', ()=>showScreen('menu'));
+
+// --- Submenu de treinamento ---
+document.getElementById('trainingBack').addEventListener('click', ()=>showScreen('menu'));
+
+// --- Tela de vídeo: lista de aulas (por enquanto todas abrem o mesmo vídeo) ---
+const AULAS = [
+  {
+    label: "Aula 1 (3:47)",
+    title: "IA preditiva: usando dados históricos para prever diagnósticos",
+    embed: "https://www.youtube.com/embed/ZQmN5P7fUig?rel=0",
+    newtab: "https://youtu.be/ZQmN5P7fUig",
+  },
+  {
+    label: "Aula 2 (5:27)",
+    title: "O que é LLM",
+    embed: "https://www.youtube.com/embed/a2zvXCNbpyk?rel=0",
+    newtab: "https://youtu.be/a2zvXCNbpyk",
+  },
+  {
+    label: "Aula 3 (3:52)",
+    title: "O que é RAG",
+    embed: "https://www.youtube.com/embed/m7cKqwIGTss?rel=0",
+    newtab: "https://youtu.be/m7cKqwIGTss",
+  },
+  {
+    label: "Aula 4 (5:03)",
+    title: "Agentes e exemplos de uso",
+    embed: "https://www.youtube.com/embed/EhJoJlfJxmg?rel=0",
+    newtab: "https://youtu.be/EhJoJlfJxmg",
+  },
+  {
+    label: "Aula 5 (1:52)",
+    title: "Como sugerir um projeto de IA para Hemobrás?",
+    embed: "https://www.youtube.com/embed/sobVrLFvKHQ?rel=0",
+    newtab: "https://youtu.be/sobVrLFvKHQ",
+  },
+  {
+    label: "Exemplo prático (3:19)",
+    title: "MVP Chat para treinamento com IA Llama rodando localmente",
+    embed: "https://www.youtube.com/embed/AIEk-HIxN1I?rel=0",
+    newtab: "https://www.youtube.com/watch?v=AIEk-HIxN1I",
+  },
+  {
+    label: "Exemplo prático (1:49)",
+    title: "MVP Quiz para treinamento com IA Llama local",
+    embed: "https://www.youtube.com/embed/LNgXXkHTq_o?rel=0",
+    newtab: "https://www.youtube.com/watch?v=LNgXXkHTq_o",
+  },
+  {
+    label: "Exemplo prático (2:56)",
+    title: "LLM em documentos do Stardoc",
+    embed: "https://www.youtube.com/embed/cD-KQE_5zfk?rel=0",
+    newtab: "https://www.youtube.com/watch?v=cD-KQE_5zfk",
+  },
+  {
+    label: "Exemplo prático (8:38)",
+    title: "Recolhendo entradas do usuário e classificando as respostas da IA",
+    embed: "https://www.youtube.com/embed/CFrANheqjTc?rel=0",
+    newtab: "https://www.youtube.com/watch?v=CFrANheqjTc",
+  },
+  {
+    label: "Exemplo prático (5:56)",
+    title: "RAG em documentos sigilosos",
+    embed: "https://www.youtube.com/embed/bPjvGHgqLjo?rel=0",
+    newtab: "https://www.youtube.com/watch?v=bPjvGHgqLjo",
+  },
+  {
+    label: "Exemplo prático (11:29)",
+    title: "RAG conectada ao Barney",
+    embed: "https://www.youtube.com/embed/8GbU90Dy0x4?rel=0",
+    newtab: "https://www.youtube.com/watch?v=8GbU90Dy0x4",
+  },
+];
+
+let aulaAtual = 0;
+
+function renderVideoList(){
+  const list = document.getElementById('videoList');
+  list.innerHTML = AULAS.map((a,i)=>`
+    <button class="video-item${i===aulaAtual ? ' active' : ''}" type="button" data-idx="${i}" aria-current="${i===aulaAtual ? 'true' : 'false'}">
+      <span class="vnum">${i+1}</span>
+      <span class="vtext">
+        <span class="vlabel">${a.label}</span>
+        <span class="vtitle">${a.title}</span>
+      </span>
+    </button>
+  `).join('');
+  list.querySelectorAll('.video-item').forEach(btn=>{
+    btn.addEventListener('click', ()=>selectAula(Number(btn.dataset.idx)));
+  });
+}
+
+function selectAula(idx){
+  aulaAtual = idx;
+  const a = AULAS[idx];
+  document.getElementById('videoFrame').innerHTML =
+    '<iframe src="'+a.embed+'" title="'+a.label+' — '+a.title+'"'
+    + ' frameborder="0"'
+    + ' allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"'
+    + ' allowfullscreen></iframe>';
+  document.getElementById('videoNewTab').href = a.newtab;
+  renderVideoList();
+}
+
+function openVideo(){
+  showScreen('video');
+  selectAula(aulaAtual);
+}
+
+// Configuração dos materiais restantes (abrem em iframe interno)
+const MATERIALS = {
+  apres: {
+    eyebrow: "Treinamento Hemobrás · Apresentação",
+    title:   "Apresentação",
+    lede:    "Os slides do workshop, com os conceitos e as oportunidades de IA na indústria farmacêutica.",
+    type:    "pdf",
+    src:     "workshop.pdf",
+    newtab:  "workshop.pdf",
+    ratio:   "ratio-pdf",
+  },
+};
+
+/* ==========================================================
+   LEITOR DE PDF (PDF.js) — usado pela Apresentação (aula.pdf)
+   ========================================================== */
+if(window.pdfjsLib){
+  pdfjsLib.GlobalWorkerOptions.workerSrc =
+    'https://cdn.jsdelivr.net/npm/pdfjs-dist@3.11.174/build/pdf.worker.min.js';
+}
+
+let pdfDoc = null;
+let pdfPageNum = 1;
+let pdfScale = null;        // null = ajustar à largura automaticamente
+let pdfCurrentFitScale = 1;
+let pdfRendering = false;
+let pdfRenderToken = 0;     // invalida cargas/renders obsoletos ao trocar de material
+
+function pdfBuildViewerHTML(){
+  return `
+    <div class="pdf-viewer">
+      <div class="pdf-toolbar">
+        <button class="pdf-btn" id="pdfPrev" aria-label="Página anterior">‹</button>
+        <span class="pdf-page-indicator" id="pdfPageIndicator">– / –</span>
+        <button class="pdf-btn" id="pdfNext" aria-label="Próxima página">›</button>
+        <span class="pdf-sep"></span>
+        <button class="pdf-btn" id="pdfZoomOut" aria-label="Diminuir zoom">−</button>
+        <span class="pdf-zoom-indicator" id="pdfZoomIndicator">—</span>
+        <button class="pdf-btn" id="pdfZoomIn" aria-label="Aumentar zoom">+</button>
+        <button class="pdf-btn pdf-btn-text" id="pdfFitWidth">Ajustar à largura</button>
+      </div>
+      <div class="pdf-canvas-wrap" id="pdfCanvasWrap">
+        <p class="pdf-status" id="pdfStatus">Carregando apresentação…</p>
+      </div>
+    </div>
+  `;
+}
+
+async function openPdf(src){
+  pdfDoc = null;
+  pdfPageNum = 1;
+  pdfScale = null;
+  pdfRenderToken++;
+  const myToken = pdfRenderToken;
+
+  const frame = document.getElementById('viewerFrame');
+  frame.className = 'viewer-frame ratio-pdf';
+  frame.innerHTML = pdfBuildViewerHTML();
+
+  document.getElementById('pdfPrev').addEventListener('click', ()=>pdfGoTo(pdfPageNum - 1));
+  document.getElementById('pdfNext').addEventListener('click', ()=>pdfGoTo(pdfPageNum + 1));
+  document.getElementById('pdfZoomOut').addEventListener('click', ()=>pdfZoom(-0.15));
+  document.getElementById('pdfZoomIn').addEventListener('click', ()=>pdfZoom(0.15));
+  document.getElementById('pdfFitWidth').addEventListener('click', ()=>{
+    pdfScale = null;
+    pdfRenderPage(pdfPageNum);
+  });
+
+  if(!window.pdfjsLib){
+    document.getElementById('pdfCanvasWrap').innerHTML =
+      '<p class="pdf-status">Não foi possível carregar o leitor de PDF (biblioteca indisponível). Verifique sua conexão e recarregue a página.</p>';
+    return;
+  }
+
+  try{
+    const doc = await pdfjsLib.getDocument(src).promise;
+    if(myToken !== pdfRenderToken) return; // usuário já trocou de material
+    pdfDoc = doc;
+    pdfRenderPage(1);
+  } catch(err){
+    if(myToken !== pdfRenderToken) return;
+    document.getElementById('pdfCanvasWrap').innerHTML =
+      '<p class="pdf-status">Não foi possível abrir "'+src+'". Confirme que o arquivo está na mesma pasta do index.html.</p>';
+  }
+}
+
+function pdfGoTo(num){
+  if(!pdfDoc || pdfRendering) return;
+  if(num < 1 || num > pdfDoc.numPages) return;
+  pdfRenderPage(num);
+}
+
+function pdfZoom(delta){
+  if(!pdfDoc || pdfRendering) return;
+  const current = pdfScale != null ? pdfScale : pdfCurrentFitScale;
+  pdfScale = Math.min(3, Math.max(0.3, current + delta));
+  pdfRenderPage(pdfPageNum);
+}
+
+async function pdfRenderPage(num){
+  if(!pdfDoc) return;
+  pdfRendering = true;
+  const myToken = pdfRenderToken;
+
+  const page = await pdfDoc.getPage(num);
+  if(myToken !== pdfRenderToken) return;
+
+  const wrap = document.getElementById('pdfCanvasWrap');
+  if(!wrap) return;
+
+  const baseViewport = page.getViewport({ scale: 1 });
+  const availWidth = wrap.clientWidth - 44; // desconta padding
+  pdfCurrentFitScale = Math.max(0.2, availWidth / baseViewport.width);
+  const scale = pdfScale != null ? pdfScale : pdfCurrentFitScale;
+  const viewport = page.getViewport({ scale });
+
+  let canvas = wrap.querySelector('canvas');
+  if(!canvas){
+    wrap.innerHTML = '';
+    canvas = document.createElement('canvas');
+    wrap.appendChild(canvas);
+  }
+  const ctx = canvas.getContext('2d');
+  const outputScale = window.devicePixelRatio || 1;
+  canvas.width = Math.floor(viewport.width * outputScale);
+  canvas.height = Math.floor(viewport.height * outputScale);
+  canvas.style.width = Math.floor(viewport.width) + 'px';
+  canvas.style.height = Math.floor(viewport.height) + 'px';
+
+  await page.render({
+    canvasContext: ctx,
+    viewport,
+    transform: outputScale !== 1 ? [outputScale,0,0,outputScale,0,0] : undefined,
+  }).promise;
+  if(myToken !== pdfRenderToken) return;
+
+  pdfPageNum = num;
+  pdfRendering = false;
+
+  document.getElementById('pdfPageIndicator').textContent = num + ' / ' + pdfDoc.numPages;
+  document.getElementById('pdfZoomIndicator').textContent = Math.round(scale * 100) + '%';
+  document.getElementById('pdfPrev').disabled = num <= 1;
+  document.getElementById('pdfNext').disabled = num >= pdfDoc.numPages;
+}
+
+function pdfClose(){
+  pdfRenderToken++;
+  pdfDoc = null;
+  pdfRendering = false;
+}
+
+let pdfResizeTimer = null;
+window.addEventListener('resize', ()=>{
+  if(!pdfDoc || pdfScale !== null) return; // só reajusta em modo "ajustar à largura"
+  clearTimeout(pdfResizeTimer);
+  pdfResizeTimer = setTimeout(()=>pdfRenderPage(pdfPageNum), 200);
+});
+
+document.addEventListener('keydown', e=>{
+  if(!pdfDoc || !screens.viewer.classList.contains('active')) return;
+  if(e.key === 'ArrowRight') pdfGoTo(pdfPageNum + 1);
+  if(e.key === 'ArrowLeft') pdfGoTo(pdfPageNum - 1);
+});
+
+function openMaterial(key){
+  const m = MATERIALS[key];
+  if(!m) return;
+  document.getElementById('viewerEyebrow').textContent = m.eyebrow;
+  document.getElementById('viewerTitle').textContent = m.title;
+  document.getElementById('viewerLede').textContent = m.lede;
+  document.getElementById('viewerNewTab').href = m.newtab;
+
+  showScreen('viewer');
+
+  if(m.type === 'pdf'){
+    openPdf(m.src);
+    return;
+  }
+
+  const frame = document.getElementById('viewerFrame');
+  frame.className = 'viewer-frame ' + m.ratio;
+  frame.innerHTML = '<iframe src="'+m.embed+'" title="'+m.title+'"'
+    + ' frameborder="0"'
+    + (m.allow ? ' allow="'+m.allow+'"' : '')
+    + ' allowfullscreen></iframe>';
+}
+
+document.getElementById('tVideo').addEventListener('click', openVideo);
+document.getElementById('tApres').addEventListener('click', ()=>openMaterial('apres'));
+document.getElementById('tFaq').addEventListener('click', openFaq);
+
+// --- Tela de vídeo: voltar ao submenu de treinamento ---
+document.getElementById('videoBack').addEventListener('click', ()=>showScreen('training'));
+document.getElementById('videoToMaterials').addEventListener('click', ()=>showScreen('training'));
+
+// --- Visualizador: voltar ao submenu de treinamento ---
+document.getElementById('viewerBack').addEventListener('click', ()=>showScreen('training'));
+document.getElementById('viewerToMaterials').addEventListener('click', ()=>showScreen('training'));
+
+// --- Lista de perguntas: voltar ao submenu + abrir/fechar todas ---
+document.getElementById('faqBack').addEventListener('click', ()=>showScreen('training'));
+document.getElementById('faqToMaterials').addEventListener('click', ()=>showScreen('training'));
+document.getElementById('faqExpandAll').addEventListener('click', ()=>{
+  document.querySelectorAll('#faqApp .qa').forEach(qa=>{
+    qa.classList.add('open');
+    qa.querySelector('.qa-toggle').setAttribute('aria-expanded','true');
+  });
+});
+document.getElementById('faqCollapseAll').addEventListener('click', ()=>{
+  document.querySelectorAll('#faqApp .qa').forEach(qa=>{
+    qa.classList.remove('open');
+    qa.querySelector('.qa-toggle').setAttribute('aria-expanded','false');
+  });
+});
+
+/* start: foca no campo de nome */
+nameInput.focus();
+</script>
+</body>
+</html>
